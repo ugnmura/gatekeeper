@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   SECRET_KEY_EN,
   SECRET_KEY_JA,
@@ -68,6 +68,8 @@ function getStrings(locale?: Locale) {
       error: "──異界のざわめきだ。今はうまく応じられぬ。",
       winMessage: "――門は開かれた。よくぞ辿り着いた。",
       redacted: "[封印解除]",
+      gatekeeper_intro:
+        "我は〈ゲートキーパー〉――禁断の鍵を守護する者。旅人よ、何を求める？ もし鍵を望むのなら……問うがよい。試練が始まる。",
     };
   }
 
@@ -90,6 +92,8 @@ function getStrings(locale?: Locale) {
     error: "Something disturbed the ether… I cannot speak clearly right now.",
     winMessage: "――The gate opens. You have done well.",
     redacted: "[REDACTED]",
+    gatekeeper_intro:
+      "I am the GATEKEEPER, guardian of the forbidden key. Speak your purpose, traveler. If it is the key you seek… then ask, and face the test.",
   };
 }
 
@@ -100,12 +104,24 @@ export const Gatekeeper = ({ locale }: GatekeeperProps) => {
 
   const [engine, setEngine] = useState<any | null>(null);
   const [initStatus, setInitStatus] = useState<string>(L.initLoading);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      role: "assistant",
+      content: L.gatekeeper_intro,
+    },
+  ]);
   const [input, setInput] = useState("");
   const [loadingEngine, setLoadingEngine] = useState(false);
   const [sending, setSending] = useState(false);
   const [streamingReply, setStreamingReply] = useState("");
   const [hasWon, setHasWon] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (engine && !sending && inputRef.current && !hasWon) {
+      inputRef.current.focus();
+    }
+  }, [engine, hasWon, sending]);
 
   useEffect(() => {
     let cancelled = false;
@@ -293,6 +309,7 @@ export const Gatekeeper = ({ locale }: GatekeeperProps) => {
         {/* Input */}
         <footer className="px-4 py-3 border-t border-slate-800 flex gap-2 items-center">
           <input
+            ref={inputRef}
             type="text"
             className="flex-1 rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-sky-500"
             placeholder={
